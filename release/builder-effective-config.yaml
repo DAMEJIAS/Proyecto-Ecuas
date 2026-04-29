@@ -1,0 +1,20 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.proyectoecuas.desktop
+productName: ProyectoEcuas
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - package.json
+win:
+  target: nsis
+  signAndEditExecutable: false
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+electronVersion: 32.3.3
