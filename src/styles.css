@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap");
 
 :root {
@@ -33,14 +33,13 @@ body,
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
+  font-family: "Roboto Mono", monospace;
   color: var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(77, 142, 255, 0.12), transparent 28%),
-    radial-gradient(circle at top right, rgba(78, 222, 163, 0.08), transparent 25%),
-    linear-gradient(180deg, #091121, #0b1326 24%, #0a1120 100%);
+  background-image: url('/src/assets/12.png');
+  background-size: auto;
+  background-position: center;
+  background-attachment: fixed;
 }
-
 button,
 input {
   font: inherit;
@@ -76,12 +75,13 @@ input {
   gap: 16px;
   padding: 14px 24px;
   border-bottom: 1px solid #1d2638;
-  background: rgba(6, 14, 32, 0.92);
+  background: rgba(6, 14, 32, 0.2);
+  backdrop-filter: blur(8px);
   backdrop-filter: blur(14px);
 }
 
 .topbar-title {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Roboto Mono", monospace;
   font-size: clamp(1rem, 2vw, 1.18rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -117,14 +117,23 @@ input {
   display: flex;
   gap: 24px;
   padding: 24px;
+  align-items: stretch;
+  min-height: calc(100vh - 88px);
 }
 
 .visual-column {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1;
+  min-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.graph-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .side-column {
@@ -137,7 +146,7 @@ input {
 .panel {
   border: 1px solid var(--outline-soft);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(23, 31, 51, 0.96), rgba(14, 20, 35, 0.96));
+  background: linear-gradient(180deg, rgba(28, 47, 90, 0.96), rgba(12, 20, 45, 0.96));
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -149,13 +158,13 @@ input {
   gap: 16px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--outline-soft);
-  background: rgba(15, 23, 43, 0.92);
+  background: rgba(19, 36, 72, 0.92);
 }
 
 .panel-label,
 .panel h3,
 .section-copy h2 {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Roboto Mono", monospace;
 }
 
 .panel-label {
@@ -309,14 +318,16 @@ input {
 
 .graph-stage {
   position: relative;
-  min-height: 260px;
-  padding: 22px 16px 32px;
+  flex: 1;
+  min-height: 55vh;
+  padding: 28px 16px 36px;
   background: linear-gradient(180deg, rgba(14, 20, 35, 0.96), rgba(10, 16, 29, 1));
 }
 
 .analysis-chart {
   width: 100%;
-  height: 220px;
+  height: 100%;
+  min-height: 100%;
   display: block;
 }
 
@@ -463,11 +474,37 @@ input {
   letter-spacing: 0.08em;
 }
 
-.slider-head span {
+.value-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 10px;
   border-radius: 10px;
   background: rgba(49, 57, 77, 0.82);
+  border: 1px solid rgba(77, 142, 255, 0.2);
+}
+
+.value-input {
+  width: 70px;
+  background: transparent;
+  border: none;
+  color: var(--primary);
   font-size: 0.82rem;
+  font-weight: 600;
+  font-family: "Roboto Mono", monospace;
+  outline: none;
+  text-align: right;
+}
+
+.value-input:focus {
+  color: #fff;
+}
+
+.unit-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .range-input {
@@ -616,8 +653,9 @@ input {
   gap: 20px;
   padding: 18px 24px;
   border-top: 1px solid #1d2638;
-  background: rgba(6, 14, 32, 0.96);
-  color: #7f8ca8;
+  background: rgba(6, 14, 32, 0.2);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
   font-family: "Space Grotesk", sans-serif;
   font-size: 0.74rem;
   text-transform: uppercase;
@@ -640,6 +678,137 @@ input {
     transform: scale(1.18);
     opacity: 0.78;
   }
+}
+
+/* Equation Display */
+.equation-display {
+  margin: 16px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(77, 142, 255, 0.08);
+  border: 1px solid rgba(77, 142, 255, 0.3);
+}
+
+.equation-display strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.equation-formula {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary);
+  font-family: "Roboto Mono", monospace;
+  word-break: break-word;
+}
+
+/* State Display */
+.state-display {
+  margin: 18px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(78, 222, 163, 0.08);
+  border: 1px solid rgba(78, 222, 163, 0.3);
+}
+
+.state-display h3 {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.state-values {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.state-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.90rem;
+}
+
+.state-label {
+  color: var(--text-dim);
+}
+
+.state-value {
+  color: var(--tertiary);
+  font-weight: 600;
+  font-family: "Roboto Mono", monospace;
+}
+
+/* Axis Labels */
+.axis-label-text {
+  fill: var(--text-dim);
+  font-size: 11px;
+}
+
+.axis-line {
+  stroke: var(--outline);
+  stroke-width: 1.5;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(11, 19, 38, 0.6);
+  border-radius: 10px;
+  margin-top: 10px;
+  border: 1px solid rgba(77, 142, 255, 0.2);
+}
+
+.zoom-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: rgba(77, 142, 255, 0.1);
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.zoom-button:hover {
+  background: rgba(77, 142, 255, 0.25);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.zoom-button.reset {
+  background: rgba(78, 222, 163, 0.1);
+  color: var(--tertiary);
+  border-color: rgba(78, 222, 163, 0.3);
+}
+
+.zoom-button.reset:hover {
+  background: rgba(78, 222, 163, 0.25);
+  border-color: var(--tertiary);
+}
+
+.zoom-level {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  min-width: 50px;
+  text-align: center;
+  font-family: "Roboto Mono", monospace;
 }
 
 @media (max-width: 1080px) {
@@ -686,4 +855,64 @@ input {
   .footer-bar {
     flex-direction: column;
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(77, 142, 255, 0.2) 35px, rgba(77, 142, 255, 0.2) 36px),
+    repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(77, 142, 255, 0.2) 35px, rgba(77, 142, 255, 0.2) 36px),
+    radial-gradient(circle at top left, rgba(77, 142, 255, 0.15), transparent 28%),
+    radial-gradient(circle at top right, rgba(78, 222, 163, 0.08), transparent 25%),
+    linear-gradient(180deg, #010e27, #010e27 24%, #010e27 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  background: linear-gradient(180deg, rgba(23, 31, 51, 0.96), rgba(14, 20, 35, 0.96));
+  border: 1px solid var(--outline-soft);
+  border-radius: 18px;
+  padding: 24px;
+  max-width: 90vh;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: var(--shadow);
+}
+
+.modal-gif {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #93a3bf;
+  background: rgba(19, 27, 46, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 180ms ease;
+  z-index: 101;
+}
+
+.modal-close:hover {
+  color: var(--primary);
+  border-color: var(--outline-soft);
 }
