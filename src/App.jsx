@@ -97,8 +97,19 @@ export default function App() {
     return rows.slice(0, visibleCount);
   }, [rows, progress]);
 
-  const chartModel = useMemo(() => buildPlotModel(visibleRows, rows, zoomLevel), [visibleRows, rows, zoomLevel]);
-  const currentState = visibleRows[visibleRows.length - 1] ?? { t: 0, x: simConfig.x0, y: simConfig.y0 };
+  const displacementChartModel = useMemo(
+    () => buildSinglePlotModel(visibleRows, rows, "x", zoomLevel),
+    [visibleRows, rows, zoomLevel]
+  );
+  const velocityChartModel = useMemo(
+    () => buildSinglePlotModel(visibleRows, rows, "y", zoomLevel),
+    [visibleRows, rows, zoomLevel]
+  );
+  const accelerationChartModel = useMemo(
+    () => buildSinglePlotModel(visibleRows, rows, "a", zoomLevel),
+    [visibleRows, rows, zoomLevel]
+  );
+  const currentState = visibleRows[visibleRows.length - 1] ?? { t: 0, x: simConfig.x0, y: simConfig.y0, a: 0 };
   
   const equationDisplay = `${form.m.toFixed(2)}X'' + ${form.b.toFixed(2)}X' + ${form.k.toFixed(2)}X = 0`;
 
@@ -136,7 +147,12 @@ export default function App() {
         h: simConfig.h
       });
 
-      setRows(result);
+      const resultWithAcceleration = result.map((row) => ({
+        ...row,
+        a: (-b * row.y - k * row.x) / m
+      }));
+
+      setRows(resultWithAcceleration);
       setProgress(0);
       progressRef.current = 0;
       setIsPlaying(true);
@@ -260,6 +276,10 @@ export default function App() {
                     <span className="state-label">Velocidad (Y):</span>
                     <span className="state-value">{formatValue(currentState.y, 4)} m/s</span>
                   </div>
+                  <div className="state-item">
+                    <span className="state-label">Aceleración (A):</span>
+                    <span className="state-value">{formatValue(currentState.a, 4)} m/s²</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -286,61 +306,85 @@ export default function App() {
         <div className="visual-column">
           <section className="panel graph-panel">
             <div className="panel-header">
-              <span className="panel-label">Análisis de Desplazamiento vs. Tiempo</span>
+              <span className="panel-label">Análisis Temporal del Sistema</span>
               <span className="panel-dt">dt = {simConfig.h}s</span>
             </div>
 
-            <div className="graph-stage">
+            <div className="multi-graph-stack">
               {visibleRows.length ? (
                 <>
-                  <svg 
-                    className="analysis-chart" 
-                    viewBox={`${(550 - 550/zoomLevel)} ${(200 - 200/zoomLevel)} ${1100/zoomLevel} ${400/zoomLevel}`}
-                    preserveAspectRatio="none" 
-                    role="img" 
-                    aria-label="Desplazamiento versus tiempo"
-                    onWheel={handleGraphWheel}
-                  >
-                  <defs>
-                    <linearGradient id="analysisStroke" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#d8e2ff" />
-                      <stop offset="100%" stopColor="#4d8eff" />
-                    </linearGradient>
-                    <linearGradient id="analysisGlow" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#4edea3" />
-                      <stop offset="100%" stopColor="#adc6ff" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Grid lines */}
-                  {chartModel.gridLines.map((y, idx) => (
-                    <line key={`grid-${idx}`} className="analysis-gridline" x1="100" y1={y} x2="1000" y2={y} />
+                  {[
+                    {
+                      key: "displacement",
+                      title: "Desplazamiento",
+                      axisY: "x (m)",
+                      model: displacementChartModel,
+                      lineClass: "displacement"
+                    },
+                    {
+                      key: "velocity",
+                      title: "Velocidad",
+                      axisY: "v (m/s)",
+                      model: velocityChartModel,
+                      lineClass: "velocity"
+                    },
+                    {
+                      key: "acceleration",
+                      title: "Aceleración",
+                      axisY: "a (m/s²)",
+                      model: accelerationChartModel,
+                      lineClass: "acceleration"
+                    }
+                  ].map((chart) => (
+                    <div className="graph-stage chart-card" key={chart.key}>
+                      <div className="chart-card-header">{chart.title} vs tiempo</div>
+                      <svg
+                        className="analysis-chart"
+                        viewBox={`${550 - 550 / zoomLevel} ${200 - 200 / zoomLevel} ${1100 / zoomLevel} ${400 / zoomLevel}`}
+                        preserveAspectRatio="none"
+                        role="img"
+                        aria-label={`${chart.title} versus tiempo`}
+                        onWheel={handleGraphWheel}
+                      >
+                        <defs>
+                          <linearGradient id={`analysisStroke-${chart.key}`} x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#d8e2ff" />
+                            <stop offset="100%" stopColor="#4d8eff" />
+                          </linearGradient>
+                          <linearGradient id={`analysisGlow-${chart.key}`} x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#4edea3" />
+                            <stop offset="100%" stopColor="#adc6ff" />
+                          </linearGradient>
+                        </defs>
+
+                        {chart.model.gridLines.map((y, idx) => (
+                          <line key={`${chart.key}-grid-${idx}`} className="analysis-gridline" x1="100" y1={y} x2="1000" y2={y} />
+                        ))}
+
+                        <line className="zero-axis" x1="100" y1={chart.model.zeroLine} x2="1000" y2={chart.model.zeroLine} />
+                        <line className="axis-line" x1="100" y1="20" x2="100" y2="340" />
+                        <line className="axis-line" x1="100" y1="340" x2="1000" y2="340" />
+
+                        {chart.model.yAxisLabels.map((label, idx) => (
+                          <text key={`${chart.key}-y-label-${idx}`} x="85" y={label.y} textAnchor="end" className="axis-label-text" fontSize={label.fontSize}>
+                            {label.value.toFixed(3)}
+                          </text>
+                        ))}
+
+                        {chart.model.xAxisLabels.map((label, idx) => (
+                          <text key={`${chart.key}-x-label-${idx}`} x={label.x} y="365" textAnchor="middle" className="axis-label-text" fontSize={label.fontSize}>
+                            {label.value.toFixed(1)}
+                          </text>
+                        ))}
+
+                        <polyline className={`analysis-glow ${chart.lineClass}`} points={chart.model.seriesLine} />
+                        <polyline className={`analysis-line ${chart.lineClass}`} points={chart.model.seriesLine} />
+                      </svg>
+
+                      <div className="axis-label axis-label-x">t (seg)</div>
+                      <div className="axis-label axis-label-y">{chart.axisY}</div>
+                    </div>
                   ))}
-                  
-                  {/* Axes */}
-                  <line className="zero-axis" x1="100" y1={chartModel.zeroLine} x2="1000" y2={chartModel.zeroLine} />
-                  <line className="axis-line" x1="100" y1="20" x2="100" y2="340" /> {/* Y axis */}
-                  <line className="axis-line" x1="100" y1="340" x2="1000" y2="340" /> {/* X axis */}
-                  
-                  {/* Y-axis labels */}
-                  {chartModel.yAxisLabels.map((label, idx) => (
-                    <text key={`y-label-${idx}`} x="85" y={label.y} textAnchor="end" className="axis-label-text" fontSize={label.fontSize}>
-                      {label.value.toFixed(3)}
-                    </text>
-                  ))}
-                  
-                  {/* X-axis labels */}
-                  {chartModel.xAxisLabels.map((label, idx) => (
-                    <text key={`x-label-${idx}`} x={label.x} y="365" textAnchor="middle" className="axis-label-text" fontSize={label.fontSize}>
-                      {label.value.toFixed(1)}
-                    </text>
-                  ))}
-                  
-                  {/* Data lines */}
-                  <polyline className="analysis-glow" points={chartModel.displacementLine} />
-                  <polyline className="analysis-line" points={chartModel.displacementLine} />
-                  <polyline className="velocity-line" points={chartModel.velocityLine} />
-                  </svg>
                   
                   <div className="zoom-controls">
                     <button className="zoom-button" onClick={handleZoomOut} title="Alejar">−</button>
@@ -352,14 +396,6 @@ export default function App() {
               ) : (
                 <div className="graph-empty">Ejecuta la simulación para generar la curva de respuesta.</div>
               )}
-
-              <div className="axis-label axis-label-x">t (seg)</div>
-              <div className="axis-label axis-label-y">x (m)</div>
-            </div>
-
-            <div className="graph-legend">
-              <span><i className="legend-dot displacement" /> Desplazamiento</span>
-              <span><i className="legend-dot velocity" /> Velocidad</span>
             </div>
           </section>
         </div>
@@ -372,12 +408,10 @@ export default function App() {
   );
 }
 
-function buildPlotModel(visibleRows, scaleRows, zoomLevel = 1) {
+function buildSinglePlotModel(visibleRows, scaleRows, valueKey, zoomLevel = 1) {
   if (!visibleRows.length || !scaleRows.length) {
     return {
-      displacementLine: "",
-      velocityLine: "",
-      displacementPoint: null,
+      seriesLine: "",
       gridLines: [],
       yAxisLabels: [],
       xAxisLabels: [],
@@ -388,7 +422,7 @@ function buildPlotModel(visibleRows, scaleRows, zoomLevel = 1) {
 
   const tMin = scaleRows[0].t;
   const tMax = scaleRows[scaleRows.length - 1].t;
-  const values = scaleRows.flatMap((row) => [row.x, row.y]);
+  const values = scaleRows.map((row) => row[valueKey]);
   const vMin = Math.min(...values);
   const vMax = Math.max(...values);
   const pad = Math.max(1e-6, (vMax - vMin) * 0.15);
@@ -427,14 +461,10 @@ function buildPlotModel(visibleRows, scaleRows, zoomLevel = 1) {
     xAxisLabels.push({ x, value: tValue, fontSize });
   }
 
-  const displacementLine = visibleRows.map((row) => `${xMap(row.t).toFixed(2)},${yMap(row.x).toFixed(2)}`).join(" ");
-  const velocityLine = visibleRows.map((row) => `${xMap(row.t).toFixed(2)},${yMap(row.y).toFixed(2)}`).join(" ");
-  const last = visibleRows[visibleRows.length - 1];
+  const seriesLine = visibleRows.map((row) => `${xMap(row.t).toFixed(2)},${yMap(row[valueKey]).toFixed(2)}`).join(" ");
 
   return {
-    displacementLine,
-    velocityLine,
-    displacementPoint: { x: xMap(last.t).toFixed(2), y: yMap(last.x).toFixed(2) },
+    seriesLine,
     gridLines,
     yAxisLabels,
     xAxisLabels,
